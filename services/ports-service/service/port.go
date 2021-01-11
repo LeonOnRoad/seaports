@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"log"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -35,7 +36,7 @@ func (s Port) GetPort(ctx context.Context, req *pbPort.GetPortRequest) (*pbPort.
 	port := &pbPort.Port{}
 	err := json.Unmarshal([]byte(val), port)
 	if err != nil {
-		// log failure of unmarshal
+		log.Printf("Failed to unmarshal bytes to port. Error: %s", err)
 		return nil, status.Error(codes.Internal, "Failed to get port")
 	}
 	return port, nil
@@ -57,8 +58,6 @@ func convertRepoErrorToGrpcError(re *repository.RepoError) error {
 		return status.Error(codes.NotFound, re.Err.Error())
 	case repository.ALREADY_EXISTS:
 		return status.Error(codes.AlreadyExists, re.Err.Error())
-	case repository.INTERNAL:
-		return status.Error(codes.Internal, re.Err.Error())
 	default:
 		return status.Error(codes.Internal, re.Err.Error())
 	}
