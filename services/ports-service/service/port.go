@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"sync"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -21,11 +22,13 @@ type Port struct {
 	pbPort.UnimplementedPortsServiceServer
 
 	repo repository.Repository
+	mtx  *sync.Mutex
 }
 
 func NewPort(r repository.Repository) *Port {
 	return &Port{
 		repo: r,
+		mtx:  &sync.Mutex{},
 	}
 }
 
@@ -44,7 +47,7 @@ func (s Port) GetPort(ctx context.Context, req *pbPort.GetPortRequest) (*pbPort.
 	return port, nil
 }
 
-func (s Port) StreamImportedPorts(stream pbPort.PortsService_StreamImportedPortsServer) error {
+func (s *Port) StreamImportedPorts(stream pbPort.PortsService_StreamImportedPortsServer) error {
 	response := &pbPort.ImportPortsResponse{}
 	for {
 		port, err := stream.Recv()
@@ -59,7 +62,7 @@ func (s Port) StreamImportedPorts(stream pbPort.PortsService_StreamImportedPorts
 	}
 }
 
-func (s Port) process(ctx context.Context, port *pbPort.Port, response *pbPort.ImportPortsResponse) {
+func (s *Port) process(ctx context.Context, port *pbPort.Port, response *pbPort.ImportPortsResponse) {
 	if port == nil {
 		return
 	}
@@ -71,6 +74,9 @@ func (s Port) process(ctx context.Context, port *pbPort.Port, response *pbPort.I
 			fmt.Sprintf("Failed to save port %s. Error while marshaling: %s", port.Id, err))
 		return
 	}
+
+	s.mtx.Lock() // this can be avoided if logic would not care if set operation creates/updates an entry
+	defer s.mtx.Unlock()
 
 	val, rErr := s.repo.Get(ctx, port.Id)
 	if rErr != nil {
