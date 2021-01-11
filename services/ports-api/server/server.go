@@ -27,9 +27,12 @@ func StartAsync(port int) *http.Server {
 func configure() *mux.Router {
 	router := mux.NewRouter()
 
+	rootController := controller.NewRoot()
+	router.HandleFunc("/", rootController.Get).Methods(http.MethodGet)
+
 	portsController := controller.NewPorts()
-	router.HandleFunc("/api/ports/{id}", portsController.Get).Methods("GET")
-	router.HandleFunc("/api/ports:import", portsController.Import).Methods("POST")
+	router.HandleFunc("/api/ports/{id}", portsController.Get).Methods(http.MethodGet)
+	router.HandleFunc("/api/ports:import", portsController.Import).Methods(http.MethodPost)
 
 	return router
 }
