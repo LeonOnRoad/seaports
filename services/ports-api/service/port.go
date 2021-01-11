@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	pbPort "company.com/seaports/proto/src/api/port"
 	"company.com/seaports/services/ports-api/model"
@@ -36,7 +36,7 @@ func (s Port) ImportPorts(portsChan <-chan *model.Port) (*model.ImportPortsRespo
 		protoPort := model.ConvertModelPortToProtoPort(port)
 		err = stream.Send(protoPort)
 		if err != nil {
-			fmt.Printf("Failed to send port through stream. Error: %s \n", err)
+			log.Printf("Failed to send port through stream. Error: %s", err)
 		}
 	}
 	resp, err := stream.CloseAndRecv()
