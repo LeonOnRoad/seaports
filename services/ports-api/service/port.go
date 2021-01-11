@@ -36,7 +36,7 @@ func (s Port) ImportPorts(portsChan <-chan *model.Port) (*model.ImportPortsRespo
 		protoPort := model.ConvertModelPortToProtoPort(port)
 		err = stream.Send(protoPort)
 		if err != nil {
-			log.Printf("Failed to send port through stream. Error: %s", err)
+			log.Printf("Failed to send port on stream. Error: %s", err)
 		}
 	}
 	resp, err := stream.CloseAndRecv()

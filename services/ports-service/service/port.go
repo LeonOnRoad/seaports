@@ -55,21 +55,46 @@ func (s Port) StreamImportedPorts(stream pbPort.PortsService_StreamImportedPorts
 			return err
 		}
 
-		bytes, err := json.Marshal(port)
-		if err != nil {
-			log.Printf("Failed to marshal port[%s] to bytes. Error: %s", port.Id, err)
-			response.Errors = append(response.Errors,
-				fmt.Sprintf("Failed to save port %s. Error while marshaling: %s", port.Id, err))
-			continue
-		}
+		s.process(stream.Context(), port, response)
+	}
+}
 
-		if rErr := s.repo.Set(stream.Context(), port.Id, string(bytes)); err != nil {
-			log.Printf("Failed to save port %s. Repository error: %s", port.Id, rErr.Err.Error())
-			response.Errors = append(response.Errors,
-				fmt.Sprintf("Failed to save port %s. Repository error: %s", port.Id, rErr.Err.Error()))
-		}
+func (s Port) process(ctx context.Context, port *pbPort.Port, response *pbPort.ImportPortsResponse) {
+	if port == nil {
+		return
 	}
 
+	bytes, err := json.Marshal(port)
+	if err != nil {
+		log.Printf("Failed to marshal port[%s] to bytes. Error: %s", port.Id, err)
+		response.Errors = append(response.Errors,
+			fmt.Sprintf("Failed to save port %s. Error while marshaling: %s", port.Id, err))
+		return
+	}
+
+	val, rErr := s.repo.Get(ctx, port.Id)
+	if rErr != nil {
+		if rErr.Type == repository.NOT_FOUND {
+			if rErr := s.repo.Set(ctx, port.Id, string(bytes)); rErr != nil {
+				log.Printf("Failed to save port %s. Repository error: %s", port.Id, rErr.Err.Error())
+				response.Errors = append(response.Errors,
+					fmt.Sprintf("Failed to save port %s. Repository error: %s", port.Id, rErr.Err.Error()))
+			} else {
+				response.Created++
+			}
+		}
+	} else {
+		if val != string(bytes) { // updated only if something changed
+			if err := s.repo.Set(ctx, port.Id, string(bytes)); err != nil {
+				log.Printf("Failed to save port %s. Repository error: %s", port.Id, rErr.Err.Error())
+				response.Errors = append(response.Errors,
+					fmt.Sprintf("Failed to save port %s. Repository error: %s", port.Id, rErr.Err.Error()))
+			} else {
+				response.Updated++
+			}
+		}
+	}
+	response.Total++
 }
 
 func convertRepoErrorToGrpcError(re *repository.RepoError) error {
