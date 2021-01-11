@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log"
 	"os"
 
@@ -21,7 +22,7 @@ func main() {
 	sh := pkgService.NewShutdownHandler(cfg.ShutdownTimeout)
 	defer sh.Close()
 
-	serverResources, err := createServerResources(cfg)
+	serverResources, serverClosers, err := createServerResources(cfg)
 	if err != nil {
 		log.Printf("Failed to create server resources. Error: %s", err)
 		os.Exit(1)
@@ -29,15 +30,24 @@ func main() {
 
 	httpServer := server.StartAsync(cfg.Port, serverResources)
 
+	// closeFunc will be called by shutdown handler when it receives a shutdown signal
 	closeFunc := func(ctx context.Context) error {
-		// this function will be called by shutdown handler when it receives a shutdown signal
+		log.Printf("Closing service resources...")
 		err := httpServer.Shutdown(ctx)
 		if err != nil {
 			log.Println("Failed to close http server gracefully")
 			return err
 		}
 
+		for _, closer := range serverClosers {
+			if closer != nil {
+				closer.Close()
+			}
+		}
+
 		// add here other resources which needs to be close
+
+		log.Printf("Closed all resources!")
 
 		return nil
 	}
@@ -45,15 +55,18 @@ func main() {
 	sh.WaitShutdown(closeFunc) // blocking
 }
 
-func createServerResources(cfg *config.Config) (*server.Resources, error) {
+func createServerResources(cfg *config.Config) (*server.Resources, []io.Closer, error) {
+	closerRes := make([]io.Closer, 0) // add here all needed resources that needs to be closed when app exists
 	portsConn, err := grpc.Dial(cfg.PortsServiceEndpoint, grpc.WithInsecure())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	portsClient := pbPort.NewPortsServiceClient(portsConn)
 	portService := service.NewPort(portsClient)
 
+	closerRes = append(closerRes, portsConn) // is nice that grpc connection to be closed when app exists
+
 	return &server.Resources{
 		PortService: portService,
-	}, nil
+	}, closerRes, nil
 }
