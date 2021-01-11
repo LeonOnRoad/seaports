@@ -13,6 +13,7 @@ import (
 	pbPort "company.com/seaports/proto/src/api/port"
 
 	"company.com/seaports/services/ports-service/config"
+	"company.com/seaports/services/ports-service/repository"
 	"company.com/seaports/services/ports-service/service"
 )
 
@@ -22,7 +23,8 @@ func main() {
 	sh := pkgService.NewShutdownHandler(cfg.ShutdownTimeout)
 	defer sh.Close()
 
-	portService := service.NewPort()
+	repo := repository.NewMemoryStorage()
+	portService := service.NewPort(repo)
 
 	grpcServer, err := StartGrpcServerAsync(cfg, portService)
 	if err != nil {
