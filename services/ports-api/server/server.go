@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"company.com/seaports/services/ports-api/controller"
@@ -19,6 +20,7 @@ func StartAsync(port int, res *Resources) *http.Server {
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("HTTP server stopped with error: %s", err)
 			panic(err)
 		}
 	}()
