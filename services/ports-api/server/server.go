@@ -32,9 +32,9 @@ func configure(res *Resources) *mux.Router {
 	rootController := controller.NewRoot()
 	router.HandleFunc("/", rootController.Get)
 
-	portsController := controller.NewPort(res.PortService)
-	router.HandleFunc("/api/ports/{id}", portsController.Get).Methods(http.MethodGet)
-	router.HandleFunc("/api/ports:import", portsController.Import).Methods(http.MethodPost)
+	portController := controller.NewPort(res.PortService)
+	router.HandleFunc("/api/ports/{id}", portController.Get).Methods(http.MethodGet)
+	router.HandleFunc("/api/ports:import", portController.Import).Methods(http.MethodPost)
 
 	return router
 }
