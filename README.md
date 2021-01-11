@@ -31,7 +31,7 @@ This test will:
 
 ## TODO - improvements
 - Add comments to all exported methods, types and type fields for generating documentation directly from code using `godoc`
-- Provide a error count or limit the error array within the response for import ports insted of the error array. Using the array is a bad idea if the number of errors is big, because it will increase the needed memory in order to accumulate them. Also the response size can increase dramatically and the end-user will have to wait longer to get the response.
-- Using a production logger like zap.Logger which I use in my daily job. Reason for using it can be found on https://github.com/uber-go/zap. It is fast, consumes less memory than other, it's robust and maintained on github. 
+- Provide a error count or limit the error array within the response for import ports insted of the error array. Using the array is a bad idea if the number of errors is big, because it will increase the needed memory in order to accumulate them. Also the response size can increase drastically and the end-user will have to wait longer to get the response.
+- Using a production logger like `zap.Logger` which I use in my daily job. Reason for using it can be found on https://github.com/uber-go/zap. It is fast, consumes less memory than other, it's robust and maintained on github. 
 - Adding unit-tests
 - Probably using Mongo would be better
