@@ -80,8 +80,13 @@ func (s Port) process(ctx context.Context, port *pbPort.Port, response *pbPort.I
 				response.Errors = append(response.Errors,
 					fmt.Sprintf("Failed to save port %s. Repository error: %s", port.Id, rErr.Err.Error()))
 			} else {
+				// log.Printf("Created port %s", port.Id)
 				response.Created++
 			}
+		} else {
+			log.Printf("Failed to save port %s. Repository error: %s", port.Id, rErr.Err.Error())
+			response.Errors = append(response.Errors,
+				fmt.Sprintf("Failed to save port %s. Repository error: %s", port.Id, rErr.Err.Error()))
 		}
 	} else {
 		if val != string(bytes) { // updated only if something changed
@@ -90,8 +95,11 @@ func (s Port) process(ctx context.Context, port *pbPort.Port, response *pbPort.I
 				response.Errors = append(response.Errors,
 					fmt.Sprintf("Failed to save port %s. Repository error: %s", port.Id, rErr.Err.Error()))
 			} else {
+				// log.Printf("Updated port %s", port.Id)
 				response.Updated++
 			}
+		} else {
+			log.Printf("Skip updating port %s. Nothing changed", port.Id)
 		}
 	}
 	response.Total++
