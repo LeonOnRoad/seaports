@@ -1,0 +1,36 @@
+{
+    "PORT1": {
+    "name": "Port1",
+    "city": "City1",
+    "country": "Country1",
+    "alias": [],
+    "regions": [],
+    "coordinates": [
+      10.10,
+      10.10
+    ],
+    "province": "Province1",
+    "timezone": "Timezone1",
+    "unlocs": [
+      "PORT1"
+    ],
+    "code": "code1"
+  },
+  "PORT2": {
+    "name": "Port2",
+    "city": "City2",
+    "country": "Country2",
+    "alias": [],
+    "regions": [],
+    "coordinates": [
+      20.20,
+      20.20
+    ],
+    "province": "Province2",
+    "timezone": "Timezone2",
+    "unlocs": [
+      "PORT2"
+    ],
+    "code": "code2"
+  }
+}
