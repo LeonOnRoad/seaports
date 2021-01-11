@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"company.com/seaports/services/ports-api/controller"
+	"company.com/seaports/services/ports-api/controller/writer"
 	"company.com/seaports/services/ports-api/service"
 	"github.com/gorilla/mux"
 )
@@ -26,6 +27,7 @@ func StartAsync(port int, res *Resources) *http.Server {
 
 func configure(res *Resources) *mux.Router {
 	router := mux.NewRouter()
+	router.NotFoundHandler = &notFoundHandler{}
 
 	rootController := controller.NewRoot()
 	router.HandleFunc("/", rootController.Get)
@@ -35,4 +37,11 @@ func configure(res *Resources) *mux.Router {
 	router.HandleFunc("/api/ports:import", portsController.Import).Methods(http.MethodPost)
 
 	return router
+}
+
+type notFoundHandler struct{}
+
+// called on an unexisting route
+func (h *notFoundHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	writer.Write(w, http.StatusNotFound, "Page not found")
 }
