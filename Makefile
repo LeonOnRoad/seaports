@@ -13,13 +13,13 @@ images: build
 	docker build -f ./services/ports-api/Dockerfile . -t "ports-api:$(DOCKER_IMAGE_TAG)"
 	docker build -f ./services/ports-service/Dockerfile . -t "ports-service:$(DOCKER_IMAGE_TAG)"
 
-run-build-containers: images
+stop-containers:
 	docker-compose down
+
+start-containers: stop-containers
 	docker-compose up -d
 
-run-containers:
-	docker-compose down
-	docker-compose up -d
+start-build-containers: images start-containers
 
 e2e-test:
 	curl localhost:8080
@@ -38,4 +38,4 @@ lint:
 	golangci-lint run -j 16
 
 .PHONY:
-	proto-gen build images run-build-containers run-containers e2e-test clean clean-proto lint
+	proto-gen build images stop-containers start-containers start-build-containers e2e-test clean clean-proto lint
