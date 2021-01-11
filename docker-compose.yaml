@@ -1,12 +1,21 @@
 version: "3.2"
 services:
+  ports-redis:
+    image: redis
+    container_name: ports-redis
+    ports:
+      - "6379:6379"
+      
   ports-service:
     image: ports-service:local-build
     container_name: ports-service
+    depends_on:
+      - ports-redis
     ports:
       - 8081:8081
     environment:
       PORT: 8081
+      REDIS_ENDPOINT: "ports-redis:6379"
 
   ports-api:
     image: ports-api:local-build
