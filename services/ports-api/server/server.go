@@ -2,21 +2,21 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"company.com/seaports/services/ports-api/controller"
+	"company.com/seaports/services/ports-api/service"
 	"github.com/gorilla/mux"
 )
 
-func StartAsync(port int) *http.Server {
-	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
-		Handler: configure(),
-	}
+type Resources struct {
+	PortService service.PortInterface
+}
+
+func StartAsync(port int, res *Resources) *http.Server {
+	server := &http.Server{Addr: fmt.Sprintf(":%d", port), Handler: configure(res)}
 
 	go func() {
-		log.Println("Starting http server...")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			panic(err)
 		}
@@ -24,13 +24,13 @@ func StartAsync(port int) *http.Server {
 	return server
 }
 
-func configure() *mux.Router {
+func configure(res *Resources) *mux.Router {
 	router := mux.NewRouter()
 
 	rootController := controller.NewRoot()
-	router.HandleFunc("/", rootController.Get).Methods(http.MethodGet)
+	router.HandleFunc("/", rootController.Get)
 
-	portsController := controller.NewPorts()
+	portsController := controller.NewPort(res.PortService)
 	router.HandleFunc("/api/ports/{id}", portsController.Get).Methods(http.MethodGet)
 	router.HandleFunc("/api/ports:import", portsController.Import).Methods(http.MethodPost)
 

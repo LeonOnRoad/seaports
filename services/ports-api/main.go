@@ -7,6 +7,7 @@ import (
 	pkgService "company.com/seaports/pkg/service"
 	"company.com/seaports/services/ports-api/config"
 	"company.com/seaports/services/ports-api/server"
+	"company.com/seaports/services/ports-api/service"
 )
 
 func main() {
@@ -14,7 +15,11 @@ func main() {
 	sh := pkgService.NewShutdownHandler(cfg.ShutdownTimeout)
 	defer sh.Close()
 
-	httpServer := server.StartAsync(8080)
+	httpServer := server.StartAsync(
+		cfg.Port,
+		&server.Resources{
+			PortService: service.NewPort(),
+		})
 
 	closeFunc := func(ctx context.Context) error {
 		// this function will be called by shutdown handler when it receives a shutdown signal
