@@ -18,7 +18,7 @@ type Config struct {
 func LoadConfig() *Config {
 	viper.AutomaticEnv()
 
-	viper.SetDefault(envPort, 8080)
+	viper.SetDefault(envPort, 8081)
 	viper.SetDefault(envPortsServiceEndpoint, "localhost:8081")
 	viper.SetDefault(envShutdownTimeout, "10s")
 
