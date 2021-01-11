@@ -13,14 +13,29 @@ images: build
 	docker build -f ./services/ports-api/Dockerfile . -t "ports-api:$(DOCKER_IMAGE_TAG)"
 	docker build -f ./services/ports-service/Dockerfile . -t "ports-service:$(DOCKER_IMAGE_TAG)"
 
-run-containers: images
+run-build-containers: images
 	docker-compose down
 	docker-compose up -d
 
-manual-test:
+run-containers:
+	docker-compose down
+	docker-compose up -d
+
+e2e-test:
 	curl localhost:8080
-	curl -X POST -H "Content-Type: application/json" -d @./assignement/ports.json http://localhost:8080/api/ports:import 
-	curl -H "Content-Type: application/json" localhost:8080/api/ports/GBQUB
+	curl -X POST -H "Content-Type: application/json" -d @./data/ports_1.json http://localhost:8080/api/ports:import 
+	curl -H "Content-Type: application/json" localhost:8080/api/ports/PORT1
+	curl -X POST -H "Content-Type: application/json" -d @./data/ports_2.json http://localhost:8080/api/ports:import 
+	curl -H "Content-Type: application/json" localhost:8080/api/ports/PORT2
+
+clean:
+	rm -rf ./bin
+
+clean-proto:
+	rm -rf ./proto/src
+
+lint:
+	golangci-lint run -j 16
 
 .PHONY:
-	proto-gen build images run-containers manual-test
+	proto-gen build images run-build-containers run-containers e2e-test clean clean-proto lint
