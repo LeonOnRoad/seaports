@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"log"
 
 	"google.golang.org/grpc/codes"
@@ -36,14 +38,38 @@ func (s Port) GetPort(ctx context.Context, req *pbPort.GetPortRequest) (*pbPort.
 	port := &pbPort.Port{}
 	err := json.Unmarshal([]byte(val), port)
 	if err != nil {
-		log.Printf("Failed to unmarshal bytes to port. Error: %s", err)
-		return nil, status.Error(codes.Internal, "Failed to get port")
+		log.Printf("Failed to unmarshal bytes to port. PortID: %s Error: %s", req.Id, err)
+		return nil, status.Errorf(codes.Internal, "Failed to get port %s", req.Id)
 	}
 	return port, nil
 }
 
 func (s Port) StreamImportedPorts(stream pbPort.PortsService_StreamImportedPortsServer) error {
-	return nil
+	response := &pbPort.ImportPortsResponse{}
+	for {
+		port, err := stream.Recv()
+		if err != nil {
+			if err == io.EOF {
+				return stream.SendAndClose(response)
+			}
+			return err
+		}
+
+		bytes, err := json.Marshal(port)
+		if err != nil {
+			log.Printf("Failed to marshal port[%s] to bytes. Error: %s", port.Id, err)
+			response.Errors = append(response.Errors,
+				fmt.Sprintf("Failed to save port %s. Error while marshaling: %s", port.Id, err))
+			continue
+		}
+
+		if rErr := s.repo.Set(stream.Context(), port.Id, string(bytes)); err != nil {
+			log.Printf("Failed to save port %s. Repository error: %s", port.Id, rErr.Err.Error())
+			response.Errors = append(response.Errors,
+				fmt.Sprintf("Failed to save port %s. Repository error: %s", port.Id, rErr.Err.Error()))
+		}
+	}
+
 }
 
 func convertRepoErrorToGrpcError(re *repository.RepoError) error {
