@@ -3,14 +3,15 @@ package main
 import (
 	"context"
 	"log"
-	"time"
 
 	pkgService "company.com/seaports/pkg/service"
+	"company.com/seaports/services/ports-api/config"
 	"company.com/seaports/services/ports-api/server"
 )
 
 func main() {
-	sh := pkgService.NewShutdownHandler(10 * time.Second)
+	cfg := config.LoadConfig()
+	sh := pkgService.NewShutdownHandler(cfg.ShutdownTimeout)
 	defer sh.Close()
 
 	httpServer := server.StartAsync(8080)
