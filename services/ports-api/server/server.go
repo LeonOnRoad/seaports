@@ -19,10 +19,12 @@ func StartAsync(port int, res *Resources) *http.Server {
 	server := &http.Server{Addr: fmt.Sprintf(":%d", port), Handler: configure(res)}
 
 	go func() {
+		log.Print("Start HTTP server for ports-api")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("HTTP server stopped with error: %s", err)
 			panic(err)
 		}
+		log.Print("Stopped HTTP server for ports-api")
 	}()
 	return server
 }
